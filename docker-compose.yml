@@ -1,0 +1,30 @@
+services:
+  uni-translate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: unitranslate-fullstack:latest
+    restart: on-failure
+    volumes:
+      - ./backend/config.container.yaml:/workspace/config.yaml
+    ports:
+      - 9431:9431
+    depends_on:
+      - mysql
+      - redis
+
+  mysql:
+    image: mysql:8.4.0
+    environment:
+      MYSQL_ROOT_PASSWORD: jsnSvEEdb4as9v
+      MYSQL_DATABASE: uni_translate
+
+  redis:
+    image: redis:7.2.4
+    command: redis-server --requirepass sGQsTh3DHrj8Yq
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.250.32.0/24

@@ -1,0 +1,98 @@
+package types
+
+import (
+	"uniTranslate/src/translate"
+
+	"github.com/gogf/gf/v2/os/gcache"
+)
+
+// TranslateData 翻译数据
+type TranslateData struct {
+	CacheId         string                     `json:"cacheId"`
+	Md5             string                     `json:"-"`
+	Translate       []*translate.TranslateResp `json:"translate"`
+	To              string                     `json:"to" orm:"toLang"`
+	Platform        string                     `json:"platform" orm:"platform"`
+	OriginalText    []string                   `json:"originalText" orm:"text"`
+	OriginalTextStr *string                    `json:"-" orm:"-"`
+	OriginalTextMd5 string                     `json:"-" orm:"textMd5"`
+	OriginalTextLen int                        `json:"originalTextLen" orm:"textLen"`
+}
+
+// CountRecord 计数记录
+type CountRecord struct {
+	SerialNumber string `json:"serialNumber"`
+	SuccessCount int    `json:"successCount"`
+	ErrorCount   int    `json:"errorCount"`
+	CharCount    int    `json:"charCount"`
+}
+
+// RecordInterface 统计接口
+type RecordInterface interface {
+	// Init 初始化数据库
+	Init(cache *gcache.Cache, cacheMode string, cachePlatform, cacheRefreshOnStartup bool) error
+	// CountRecord 计数统计
+	CountRecord(data *CountRecordData) error
+	// RequestRecord 请求记录
+	RequestRecord(data *RequestRecordData) error
+	// CreateEvent 触发创建事件
+	CreateEvent(data *TranslatePlatform) error
+	// SaveCache 存储翻译结果到缓存
+	SaveCache(data *SaveData) error
+	// GetterCache 获取翻译结果
+	GetterCache(fn func(data []*TranslateData) (err error)) error
+	// GetCountRecord 获取计数记录
+	GetCountRecord() (data map[string]*CountRecord, err error)
+}
+
+type CountRecordData struct {
+	Data *TranslateData `json:"data"`
+	Ok   bool           `json:"ok"`
+}
+
+type RequestRecordData struct {
+	ClientIp     string        `json:"clientIp"`
+	Body         *TranslateReq `json:"body"`
+	Time         int64         `json:"time"`
+	Ok           bool          `json:"ok"`
+	Platform     string        `json:"platform"`
+	ErrMsg       error         `json:"errMsg"`
+	CacheId      string        `json:"cacheId"`
+	TraceId      string        `json:"traceId" orm:"tId"`
+	TakeTime     int           `json:"takeTime"`
+	PlatformName string        `json:"platformName"`
+}
+
+type SaveData struct {
+	Data *TranslateData `json:"data"`
+}
+
+// AggregateTranslationReq 聚合翻译请求
+type AggregateTranslationReq struct {
+	From     string   `p:"from" v:"required#参数错误"`
+	To       string   `p:"to" v:"required#参数错误"`
+	Text     string   `p:"text" v:"required#参数错误"`
+	Platform []string `p:"platform"`
+}
+
+// AggregateTranslateResult 聚合翻译结果
+type AggregateTranslateResult struct {
+	FromLang  string `json:"fromLang"`
+	Translate string `json:"translate"`
+	Platform  string `json:"platform"`
+	ErrorStr  string `json:"errorStr"`
+}
+
+// TranslateReq 翻译请求
+type TranslateReq struct {
+	From     string   `json:"from" p:"from" v:"required#参数错误"`
+	To       string   `json:"to" p:"to" v:"required#参数错误"`
+	Text     []string `json:"text" p:"text" v:"required#参数错误"`
+	Platform string   `json:"platform" p:"platform"`
+}
+
+type LibreTranslateReq struct {
+	QueryStr string `json:"q" p:"q" v:"required#参数错误"`
+	Source   string `json:"source" p:"source" v:"required#参数错误" `
+	Target   string `json:"target" p:"target" v:"required#参数错误"`
+}
